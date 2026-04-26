@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_select_items"
+        android:title="@string/select_items"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_select_all"
+        android:title="@string/select_all"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_save_selected"
+        android:title="@string/save_copies"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_delete_selected"
+        android:title="@string/bulk_delete"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_move_selected"
+        android:title="@string/bulk_move"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_copy_selected"
+        android:title="@string/bulk_copy"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_done_selection"
+        android:title="@string/cancel_selection"
+        android:visible="false"
+        app:showAsAction="never" />
+</menu>

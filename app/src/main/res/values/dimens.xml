@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="alpha_space_xs">6dp</dimen>
+    <dimen name="alpha_space_sm">10dp</dimen>
+    <dimen name="alpha_space_md">14dp</dimen>
+    <dimen name="alpha_space_lg">20dp</dimen>
+    <dimen name="alpha_card_radius">14dp</dimen>
+    <dimen name="alpha_card_stroke">1dp</dimen>
+    <dimen name="alpha_grid_cell_gap">6dp</dimen>
+    <dimen name="alpha_toolbar_elevation">3dp</dimen>
+</resources>

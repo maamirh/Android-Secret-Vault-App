@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/alpha_grid_cell_gap"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@color/alpha_surface"
+    app:cardCornerRadius="@dimen/alpha_card_radius"
+    app:cardElevation="1dp"
+    app:rippleColor="@color/alpha_ripple"
+    app:strokeColor="@color/alpha_outline_soft"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/folderIcon"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/albums_title"
+            android:src="@drawable/ic_folder_album"
+            app:tint="@color/alpha_gold" />
+
+        <TextView
+            android:id="@+id/folderName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="@color/alpha_on_surface"
+            tools:text="General" />
+
+        <TextView
+            android:id="@+id/folderCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="@color/alpha_on_surface_muted"
+            tools:text="12 items" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

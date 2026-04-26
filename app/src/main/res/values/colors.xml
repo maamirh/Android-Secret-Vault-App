@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="alpha_bg">#0B1220</color>
+    <color name="alpha_surface">#121C2E</color>
+    <color name="alpha_surface_variant">#1A2740</color>
+    <color name="alpha_on_surface">#E8EDF7</color>
+    <color name="alpha_on_surface_muted">#9AA7BD</color>
+    <color name="alpha_gold">#D4AF37</color>
+    <color name="alpha_gold_dim">#8F7428</color>
+    <color name="alpha_outline">#33415C</color>
+    <color name="alpha_outline_soft">#283A5A</color>
+    <color name="alpha_ripple">#40D4AF37</color>
+    <color name="alpha_surface_elevated">#151F33</color>
+    <color name="alpha_scrim">#CC0B1220</color>
+    <!-- Fully opaque lock backdrop so nothing from the main UI leaks behind biometric -->
+    <color name="alpha_lock_backdrop">#FF0B1220</color>
+</resources>

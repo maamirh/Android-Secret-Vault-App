@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Alpha" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/alpha_gold</item>
+        <item name="colorOnPrimary">@color/alpha_bg</item>
+        <item name="colorPrimaryContainer">@color/alpha_surface_variant</item>
+        <item name="colorOnPrimaryContainer">@color/alpha_on_surface</item>
+        <item name="android:colorBackground">@color/alpha_bg</item>
+        <item name="colorSurface">@color/alpha_surface</item>
+        <item name="colorSurfaceContainer">@color/alpha_surface_variant</item>
+        <item name="colorSurfaceContainerHigh">@color/alpha_surface_elevated</item>
+        <item name="colorOnSurface">@color/alpha_on_surface</item>
+        <item name="colorOutline">@color/alpha_outline</item>
+        <item name="android:statusBarColor">@color/alpha_bg</item>
+        <item name="android:navigationBarColor">@color/alpha_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
