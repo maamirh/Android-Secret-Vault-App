@@ -79,7 +79,12 @@ class AlbumBrowseAdapter(
             rows.add(AlbumBrowseItem.SubfolderRow(f.directory, f.name, f.itemCount))
         }
         files.forEach { rows.add(AlbumBrowseItem.VaultFileRow(it)) }
-        submitList(rows)
+        submitList(rows) {
+            // DiffUtil may skip binds when subfolder/file metadata unchanged; refresh selection chrome.
+            if (selectionActive && itemCount > 0) {
+                notifyItemRangeChanged(0, itemCount)
+            }
+        }
     }
 
     fun isSelectionActive(): Boolean = selectionActive
@@ -154,6 +159,67 @@ class AlbumBrowseAdapter(
         selectedFolders.add(dir)
         notifyDataSetChanged()
         onSelectionChanged()
+    }
+
+    private fun applySubfolderRowA11y(
+        binding: ItemAlbumSubfolderCellBinding,
+        row: AlbumBrowseItem.SubfolderRow,
+        vaultUnlocked: Boolean,
+        sel: Boolean,
+    ) {
+        val ctx = binding.root.context
+        binding.folderHero.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        binding.folderCellName.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        binding.folderCellCount.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        binding.root.contentDescription = when {
+            !vaultUnlocked -> ctx.getString(R.string.a11y_subfolder_locked, row.displayName)
+            sel -> ctx.getString(R.string.a11y_subfolder_select_mode, row.displayName, row.itemCount)
+            else -> ctx.getString(R.string.a11y_subfolder_open, row.displayName, row.itemCount)
+        }
+        if (vaultUnlocked && sel) {
+            binding.folderSelectCheck.contentDescription =
+                ctx.getString(R.string.a11y_toggle_select_folder, row.displayName)
+        } else {
+            binding.folderSelectCheck.contentDescription = null
+        }
+    }
+
+    private fun applyFileRowActionButtonA11y(binding: ItemVaultFileBinding, displayName: String) {
+        val ctx = binding.root.context
+        binding.actionScroll.contentDescription = ctx.getString(R.string.a11y_file_action_row)
+        binding.viewButton.contentDescription =
+            ctx.getString(R.string.a11y_action_with_document, ctx.getString(R.string.view_file), displayName)
+        binding.playButton.contentDescription =
+            ctx.getString(R.string.a11y_action_with_document, ctx.getString(R.string.play_video), displayName)
+        binding.exportButton.contentDescription =
+            ctx.getString(R.string.a11y_action_with_document, ctx.getString(R.string.export_decrypt), displayName)
+        binding.deleteButton.contentDescription =
+            ctx.getString(R.string.a11y_action_with_document, ctx.getString(R.string.delete), displayName)
+    }
+
+    private fun applyVaultFileRowA11y(
+        binding: ItemVaultFileBinding,
+        displayName: String,
+        kindLabel: String,
+        vaultUnlocked: Boolean,
+        inGrid: Boolean,
+        sel: Boolean,
+    ) {
+        val ctx = binding.root.context
+        binding.thumbnail.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        binding.fileName.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        binding.fileKind.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        binding.root.contentDescription = when {
+            !vaultUnlocked -> ctx.getString(R.string.a11y_vault_file_locked, displayName, kindLabel)
+            sel -> ctx.getString(R.string.a11y_vault_file_select, displayName, kindLabel)
+            inGrid -> ctx.getString(R.string.a11y_vault_file_grid, displayName, kindLabel)
+            else -> ctx.getString(R.string.a11y_vault_file_list, displayName, kindLabel)
+        }
+        if (vaultUnlocked && sel) {
+            binding.selectCheck.contentDescription = ctx.getString(R.string.a11y_toggle_select_file, displayName)
+        } else {
+            binding.selectCheck.contentDescription = null
+        }
     }
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
@@ -243,6 +309,8 @@ class AlbumBrowseAdapter(
                 toggleFolder(row.dir)
                 binding.folderSelectCheck.isChecked = selectedFolders.contains(row.dir)
             }
+
+            applySubfolderRowA11y(binding, row, vaultUnlocked, sel)
         }
     }
 
@@ -259,7 +327,8 @@ class AlbumBrowseAdapter(
 
         fun bind(file: File, vaultUnlocked: Boolean, viewMode: ViewMode) {
             cancelThumbJob()
-            binding.fileName.text = VaultMedia.displayName(file)
+            val displayName = VaultMedia.displayName(file)
+            binding.fileName.text = displayName
             binding.root.alpha = if (vaultUnlocked) 1f else 0.45f
 
             val sel = selectionActive
@@ -361,6 +430,17 @@ class AlbumBrowseAdapter(
                 if (!vaultUnlocked) return@setOnClickListener
                 onDeleteFile(file)
             }
+
+            applyFileRowActionButtonA11y(binding, displayName)
+
+            applyVaultFileRowA11y(
+                binding,
+                displayName,
+                binding.fileKind.text.toString(),
+                vaultUnlocked,
+                inGrid,
+                sel,
+            )
         }
     }
 

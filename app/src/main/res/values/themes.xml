@@ -10,6 +10,9 @@
         <item name="colorSurfaceContainer">@color/alpha_surface_variant</item>
         <item name="colorSurfaceContainerHigh">@color/alpha_surface_elevated</item>
         <item name="colorOnSurface">@color/alpha_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/alpha_on_surface_variant</item>
+        <item name="colorError">@color/alpha_error</item>
+        <item name="colorOnError">@color/alpha_on_error</item>
         <item name="colorOutline">@color/alpha_outline</item>
         <item name="android:statusBarColor">@color/alpha_bg</item>
         <item name="android:navigationBarColor">@color/alpha_bg</item>

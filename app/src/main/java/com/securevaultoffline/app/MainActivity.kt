@@ -16,6 +16,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -24,11 +25,17 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.view.MenuProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.securevaultoffline.app.databinding.ActivityMainBinding
 import java.io.File
 import java.util.ArrayDeque
@@ -115,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             runCatching {
                 enqueueImportsFromUris(uris)
             }.onFailure { e ->
-                Toast.makeText(this, e.message ?: getString(R.string.import_queue_failed), Toast.LENGTH_LONG).show()
+                showAppSnackbar(e.message ?: getString(R.string.import_queue_failed), longDuration = true)
                 clearImportPending()
             }
         }
@@ -132,16 +139,15 @@ class MainActivity : AppCompatActivity() {
                     }
                 } catch (e: Exception) {
                     dismissImportProgress()
-                    Toast.makeText(
-                        this@MainActivity,
+                    showAppSnackbar(
                         e.message ?: getString(R.string.import_queue_failed),
-                        Toast.LENGTH_LONG,
-                    ).show()
+                        longDuration = true,
+                    )
                     return@launch
                 }
                 if (pairs.isEmpty()) {
                     dismissImportProgress()
-                    Toast.makeText(this@MainActivity, R.string.import_folder_empty, Toast.LENGTH_SHORT).show()
+                    showAppSnackbar(getString(R.string.import_folder_empty))
                     return@launch
                 }
                 val pending = withContext(Dispatchers.IO) {
@@ -186,14 +192,19 @@ class MainActivity : AppCompatActivity() {
                         VaultCrypto.decryptStream(input, output, cipher)
                     }
                 } ?: error("Could not open export destination")
-                Toast.makeText(this, "Exported: $suggested", Toast.LENGTH_SHORT).show()
+                showAppSnackbar(getString(R.string.export_success_named, suggested ?: ""))
             }.onFailure { e ->
-                Toast.makeText(this, e.message ?: "Export failed", Toast.LENGTH_LONG).show()
+                showAppSnackbar(e.message ?: getString(R.string.error_export_failed), longDuration = true)
             }
         }
 
     private val backPressedCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
+            if (browseMode == BrowseMode.FOLDER_BROWSER && folderAdapter.isSelectionActive()) {
+                folderAdapter.clearSelection()
+                refreshAlbumToolbarUi()
+                return
+            }
             if (browseMode == BrowseMode.ALBUM_CONTENT && albumBrowseAdapter.isSelectionActive()) {
                 albumBrowseAdapter.clearSelection()
                 refreshAlbumToolbarUi()
@@ -214,10 +225,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        enableEdgeToEdge()
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.mainCoordinator) { v, windowInsets ->
+            val bars = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
+            )
+            v.updatePadding(bars.left, bars.top, bars.right, bars.bottom)
+            windowInsets
+        }
         applySecureWindow()
         setSupportActionBar(binding.topToolbar)
         binding.topToolbar.setNavigationOnClickListener {
-            if (browseMode == BrowseMode.ALBUM_CONTENT && albumBrowseAdapter.isSelectionActive()) {
+            if (browseMode == BrowseMode.FOLDER_BROWSER && folderAdapter.isSelectionActive()) {
+                folderAdapter.clearSelection()
+                refreshAlbumToolbarUi()
+            } else if (browseMode == BrowseMode.ALBUM_CONTENT && albumBrowseAdapter.isSelectionActive()) {
                 albumBrowseAdapter.clearSelection()
                 refreshAlbumToolbarUi()
             } else if (browseMode == BrowseMode.ALBUM_CONTENT && navigateAlbumUp()) {
@@ -235,7 +261,10 @@ class MainActivity : AppCompatActivity() {
 
         VaultCrypto.createVaultKeyIfNeeded()
 
-        folderAdapter = AlbumFolderAdapter { album -> openAlbum(album) }
+        folderAdapter = AlbumFolderAdapter(
+            onOpen = { album -> openAlbum(album) },
+            onSelectionChanged = { refreshAlbumToolbarUi() },
+        )
         binding.folderList.layoutManager = GridLayoutManager(this, 3)
         binding.folderList.adapter = folderAdapter
 
@@ -259,6 +288,9 @@ class MainActivity : AppCompatActivity() {
             onSelectionChanged = { refreshAlbumToolbarUi() },
         )
         binding.fileList.adapter = albumBrowseAdapter
+        ViewCompat.setAccessibilityPaneTitle(binding.folderList, getString(R.string.a11y_pane_folder_list))
+        ViewCompat.setAccessibilityPaneTitle(binding.fileList, getString(R.string.a11y_pane_album_list))
+        ViewCompat.setAccessibilityPaneTitle(binding.statusCard, getString(R.string.a11y_pane_status))
         onBackPressedDispatcher.addCallback(this, backPressedCallback)
 
         addMenuProvider(
@@ -268,29 +300,47 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onPrepareMenu(menu: Menu) {
-                    if (!::albumBrowseAdapter.isInitialized) return
+                    if (!::albumBrowseAdapter.isInitialized || !::folderAdapter.isInitialized) return
                     val unlocked = SessionGate.isUnlocked
                     val inAlbum = unlocked && browseMode == BrowseMode.ALBUM_CONTENT
-                    val sel = albumBrowseAdapter.isSelectionActive()
-                    val nTotal = albumBrowseAdapter.totalSelectedCount()
-                    val nFiles = albumBrowseAdapter.getSelectedVaultFiles().size
-                    val nFolders = albumBrowseAdapter.getSelectedSubfolders().size
+                    val inLibrary = unlocked && browseMode == BrowseMode.FOLDER_BROWSER
+                    val albumSel = inAlbum && albumBrowseAdapter.isSelectionActive()
+                    val libSel = inLibrary && folderAdapter.isSelectionActive()
+                    val nAlbumTotal = albumBrowseAdapter.totalSelectedCount()
+                    val nAlbumFiles = albumBrowseAdapter.getSelectedVaultFiles().size
+                    val nAlbumFolders = albumBrowseAdapter.getSelectedSubfolders().size
+                    val nLib = folderAdapter.totalSelectedCount()
                     menu.findItem(R.id.menu_select_items)?.apply {
-                        isVisible = inAlbum && !sel
+                        isVisible = (inAlbum && !albumSel) || (inLibrary && !libSel)
+                        isEnabled = when {
+                            inAlbum -> albumBrowseAdapter.browseItemCount() > 0
+                            inLibrary -> folderAdapter.itemCount > 0
+                            else -> false
+                        }
                     }
                     menu.findItem(R.id.menu_select_all)?.apply {
-                        isVisible = inAlbum && sel
-                        isEnabled = albumBrowseAdapter.browseItemCount() > 0
+                        isVisible = (inAlbum && albumSel) || (inLibrary && libSel)
+                        isEnabled = when {
+                            inAlbum -> albumBrowseAdapter.browseItemCount() > 0
+                            inLibrary -> folderAdapter.itemCount > 0
+                            else -> false
+                        }
                     }
-                    val bulk = inAlbum && sel
-                    val canDelete = bulk && nTotal > 0
-                    val canExportFiles = bulk && nFiles > 0
-                    val canMoveCopy = bulk && (nFiles > 0 || nFolders > 0)
+                    val bulkAlbum = inAlbum && albumSel
+                    val bulkLib = inLibrary && libSel
+                    val bulk = bulkAlbum || bulkLib
+                    val canDelete = when {
+                        bulkLib -> nLib > 0
+                        bulkAlbum -> nAlbumTotal > 0
+                        else -> false
+                    }
+                    val canExportFiles = bulkAlbum && nAlbumFiles > 0
+                    val canMoveCopy = (bulkAlbum && (nAlbumFiles > 0 || nAlbumFolders > 0)) || (bulkLib && nLib > 0)
                     menu.findItem(R.id.menu_save_selected)?.apply {
                         isVisible = bulk
                         isEnabled = canExportFiles
-                        title = if (nFiles > 0) {
-                            getString(R.string.save_copies_count, nFiles)
+                        title = if (nAlbumFiles > 0) {
+                            getString(R.string.save_copies_count, nAlbumFiles)
                         } else {
                             getString(R.string.save_copies)
                         }
@@ -298,10 +348,10 @@ class MainActivity : AppCompatActivity() {
                     menu.findItem(R.id.menu_delete_selected)?.apply {
                         isVisible = bulk
                         isEnabled = canDelete
-                        title = if (nTotal > 0) {
-                            getString(R.string.bulk_delete_count, nTotal)
-                        } else {
-                            getString(R.string.bulk_delete)
+                        title = when {
+                            bulkLib && nLib > 0 -> getString(R.string.bulk_delete_count, nLib)
+                            bulkAlbum && nAlbumTotal > 0 -> getString(R.string.bulk_delete_count, nAlbumTotal)
+                            else -> getString(R.string.bulk_delete)
                         }
                     }
                     menu.findItem(R.id.menu_move_selected)?.apply {
@@ -319,51 +369,90 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                    if (!::albumBrowseAdapter.isInitialized) return false
+                    if (!::albumBrowseAdapter.isInitialized || !::folderAdapter.isInitialized) return false
                     when (menuItem.itemId) {
                         R.id.menu_select_items -> {
-                            albumBrowseAdapter.setSelectionActive(true)
+                            when (browseMode) {
+                                BrowseMode.FOLDER_BROWSER -> folderAdapter.setSelectionActive(true)
+                                BrowseMode.ALBUM_CONTENT -> albumBrowseAdapter.setSelectionActive(true)
+                            }
                             refreshAlbumToolbarUi()
                             return true
                         }
                         R.id.menu_select_all -> {
-                            albumBrowseAdapter.selectAllVisible()
+                            when (browseMode) {
+                                BrowseMode.FOLDER_BROWSER -> folderAdapter.selectAllVisible()
+                                BrowseMode.ALBUM_CONTENT -> albumBrowseAdapter.selectAllVisible()
+                            }
                             refreshAlbumToolbarUi()
                             return true
                         }
                         R.id.menu_save_selected -> {
-                            val sel = albumBrowseAdapter.getSelectedVaultFiles()
-                            if (sel.isNotEmpty()) {
-                                prepareBatchExport(sel)
-                            } else {
-                                Toast.makeText(this@MainActivity, R.string.bulk_files_only_export, Toast.LENGTH_SHORT).show()
+                            when (browseMode) {
+                                BrowseMode.FOLDER_BROWSER ->
+                                    showAppSnackbar(getString(R.string.bulk_files_only_export))
+                                BrowseMode.ALBUM_CONTENT -> {
+                                    val sel = albumBrowseAdapter.getSelectedVaultFiles()
+                                    if (sel.isNotEmpty()) {
+                                        prepareBatchExport(sel)
+                                    } else {
+                                        showAppSnackbar(getString(R.string.bulk_files_only_export))
+                                    }
+                                }
                             }
                             return true
                         }
                         R.id.menu_delete_selected -> {
-                            val files = albumBrowseAdapter.getSelectedVaultFiles()
-                            val dirs = albumBrowseAdapter.getSelectedSubfolders()
-                            if (files.isNotEmpty() || dirs.isNotEmpty()) confirmBulkDelete(files, dirs)
+                            when (browseMode) {
+                                BrowseMode.FOLDER_BROWSER -> {
+                                    val dirs = folderAdapter.getSelectedAlbumDirs()
+                                    if (dirs.isNotEmpty()) confirmBulkDelete(emptyList(), dirs)
+                                }
+                                BrowseMode.ALBUM_CONTENT -> {
+                                    val files = albumBrowseAdapter.getSelectedVaultFiles()
+                                    val dirs = albumBrowseAdapter.getSelectedSubfolders()
+                                    if (files.isNotEmpty() || dirs.isNotEmpty()) confirmBulkDelete(files, dirs)
+                                }
+                            }
                             return true
                         }
                         R.id.menu_move_selected -> {
-                            val files = albumBrowseAdapter.getSelectedVaultFiles()
-                            val dirs = albumBrowseAdapter.getSelectedSubfolders()
-                            if (files.isNotEmpty() || dirs.isNotEmpty()) {
-                                promptBulkMoveOrCopyToAlbum(files, dirs, move = true)
+                            when (browseMode) {
+                                BrowseMode.FOLDER_BROWSER -> {
+                                    val dirs = folderAdapter.getSelectedAlbumDirs()
+                                    if (dirs.isNotEmpty()) promptBulkMoveOrCopyToAlbum(emptyList(), dirs, move = true)
+                                }
+                                BrowseMode.ALBUM_CONTENT -> {
+                                    val files = albumBrowseAdapter.getSelectedVaultFiles()
+                                    val dirs = albumBrowseAdapter.getSelectedSubfolders()
+                                    if (files.isNotEmpty() || dirs.isNotEmpty()) {
+                                        promptBulkMoveOrCopyToAlbum(files, dirs, move = true)
+                                    }
+                                }
                             }
                             return true
                         }
                         R.id.menu_copy_selected -> {
-                            val files = albumBrowseAdapter.getSelectedVaultFiles()
-                            val dirs = albumBrowseAdapter.getSelectedSubfolders()
-                            if (files.isNotEmpty() || dirs.isNotEmpty()) {
-                                promptBulkMoveOrCopyToAlbum(files, dirs, move = false)
+                            when (browseMode) {
+                                BrowseMode.FOLDER_BROWSER -> {
+                                    val dirs = folderAdapter.getSelectedAlbumDirs()
+                                    if (dirs.isNotEmpty()) promptBulkMoveOrCopyToAlbum(emptyList(), dirs, move = false)
+                                }
+                                BrowseMode.ALBUM_CONTENT -> {
+                                    val files = albumBrowseAdapter.getSelectedVaultFiles()
+                                    val dirs = albumBrowseAdapter.getSelectedSubfolders()
+                                    if (files.isNotEmpty() || dirs.isNotEmpty()) {
+                                        promptBulkMoveOrCopyToAlbum(files, dirs, move = false)
+                                    }
+                                }
                             }
                             return true
                         }
                         R.id.menu_done_selection -> {
-                            albumBrowseAdapter.clearSelection()
+                            when (browseMode) {
+                                BrowseMode.FOLDER_BROWSER -> folderAdapter.clearSelection()
+                                BrowseMode.ALBUM_CONTENT -> albumBrowseAdapter.clearSelection()
+                            }
                             refreshAlbumToolbarUi()
                             return true
                         }
@@ -387,6 +476,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.newAlbumButton.setOnClickListener { promptCreateAlbum() }
+        binding.newSubfolderButton.setOnClickListener { promptCreateSubfolder() }
 
         applyBrowseLayout()
         if (browseMode == BrowseMode.FOLDER_BROWSER) {
@@ -407,11 +497,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             if (!canUseBiometricOrDeviceCredential()) {
-                Toast.makeText(
-                    this,
-                    "Set a screen lock and fingerprint in system settings first.",
-                    Toast.LENGTH_LONG,
-                ).show()
+                showAppSnackbar(getString(R.string.error_screen_lock_setup), longDuration = true)
                 return@setOnClickListener
             }
             SessionGate.allowExternalFlowFor(EXTERNAL_FLOW_GRACE_MS)
@@ -436,8 +522,10 @@ class MainActivity : AppCompatActivity() {
         val unlocked = SessionGate.isUnlocked
         binding.lockOverlay.isVisible = !unlocked
         setMainChromeVisible(unlocked)
+        if (!unlocked && ::folderAdapter.isInitialized) folderAdapter.clearSelection()
         albumBrowseAdapter.setVaultUnlocked(unlocked)
         binding.importButton.isEnabled = unlocked && browseMode == BrowseMode.ALBUM_CONTENT
+        binding.newSubfolderButton.isEnabled = unlocked && browseMode == BrowseMode.ALBUM_CONTENT
         binding.newAlbumButton.isEnabled = unlocked && browseMode == BrowseMode.FOLDER_BROWSER
         binding.viewModeToggle.isEnabled = unlocked && browseMode == BrowseMode.ALBUM_CONTENT
         binding.listModeButton.isEnabled = unlocked && browseMode == BrowseMode.ALBUM_CONTENT
@@ -451,18 +539,45 @@ class MainActivity : AppCompatActivity() {
             binding.topToolbar.subtitle = ""
             return
         }
-        binding.topToolbar.subtitle = if (
-            browseMode == BrowseMode.ALBUM_CONTENT && albumBrowseAdapter.isSelectionActive()
-        ) {
-            getString(R.string.bulk_selected_count, albumBrowseAdapter.totalSelectedCount())
-        } else {
-            getString(R.string.alpha_tagline)
+        binding.topToolbar.subtitle = when {
+            browseMode == BrowseMode.ALBUM_CONTENT && albumBrowseAdapter.isSelectionActive() ->
+                getString(R.string.bulk_selected_count, albumBrowseAdapter.totalSelectedCount())
+            browseMode == BrowseMode.FOLDER_BROWSER && ::folderAdapter.isInitialized &&
+                folderAdapter.isSelectionActive() ->
+                getString(R.string.bulk_selected_count, folderAdapter.totalSelectedCount())
+            else -> getString(R.string.alpha_tagline)
         }
     }
 
     private fun refreshAlbumToolbarUi() {
+        if (browseMode == BrowseMode.FOLDER_BROWSER && ::folderAdapter.isInitialized) {
+            supportActionBar?.setDisplayHomeAsUpEnabled(folderAdapter.isSelectionActive())
+        }
+        if (::folderAdapter.isInitialized) {
+            backPressedCallback.isEnabled =
+                browseMode == BrowseMode.ALBUM_CONTENT ||
+                    (browseMode == BrowseMode.FOLDER_BROWSER && folderAdapter.isSelectionActive())
+        } else {
+            backPressedCallback.isEnabled = browseMode == BrowseMode.ALBUM_CONTENT
+        }
         refreshToolbarSubtitle()
         invalidateMenu()
+    }
+
+    private fun showAppSnackbar(message: CharSequence, longDuration: Boolean = false) {
+        val snack = Snackbar.make(
+            binding.mainCoordinator,
+            message,
+            if (longDuration) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT,
+        )
+        snack.setBackgroundTint(getColor(R.color.alpha_surface_variant))
+        snack.setTextColor(getColor(R.color.alpha_on_surface))
+        snack.setActionTextColor(getColor(R.color.alpha_gold))
+        when {
+            binding.viewModeToggle.isVisible -> snack.setAnchorView(binding.viewModeToggle)
+            binding.importButton.isVisible -> snack.setAnchorView(binding.importButton)
+        }
+        snack.show()
     }
 
     private fun setMainChromeVisible(visible: Boolean) {
@@ -475,6 +590,7 @@ class MainActivity : AppCompatActivity() {
             binding.libraryHeaderRow.visibility = View.GONE
             binding.browserFrame.visibility = View.GONE
             binding.viewModeToggle.visibility = View.GONE
+            binding.albumSecondaryBlock.visibility = View.GONE
         }
     }
 
@@ -488,7 +604,6 @@ class MainActivity : AppCompatActivity() {
                 binding.viewModeToggle.visibility = View.GONE
                 supportActionBar?.setDisplayHomeAsUpEnabled(false)
                 supportActionBar?.title = getString(R.string.app_name)
-                backPressedCallback.isEnabled = false
             }
             BrowseMode.ALBUM_CONTENT -> {
                 binding.libraryHeaderRow.visibility = View.GONE
@@ -498,13 +613,14 @@ class MainActivity : AppCompatActivity() {
                 binding.viewModeToggle.visibility = View.VISIBLE
                 supportActionBar?.setDisplayHomeAsUpEnabled(true)
                 updateAlbumToolbarTitle()
-                backPressedCallback.isEnabled = true
             }
         }
+        refreshAlbumActionsHint()
         refreshAlbumToolbarUi()
     }
 
     private fun openAlbum(album: AlbumFolderUi) {
+        folderAdapter.clearSelection()
         albumBrowseAdapter.clearSelection()
         currentAlbumName = album.name
         albumSubPath = ""
@@ -531,7 +647,7 @@ class MainActivity : AppCompatActivity() {
             val count = dir.walkTopDown().count { it.isFile && it.name.endsWith(".vault", ignoreCase = true) }
             AlbumFolderUi(name = n, itemCount = count, directory = dir)
         }
-        folderAdapter.submitList(items)
+        folderAdapter.submitAlbums(items)
         refreshStatusText()
     }
 
@@ -599,12 +715,12 @@ class MainActivity : AppCompatActivity() {
                 val raw = input.text?.toString().orEmpty()
                 val name = sanitizeAlbumName(raw)
                 if (name.isBlank()) {
-                    Toast.makeText(this, "Enter a name", Toast.LENGTH_SHORT).show()
+                    showAppSnackbar(getString(R.string.error_enter_album_name))
                     return@setPositiveButton
                 }
                 val dir = File(albumsRoot, name)
                 if (dir.exists()) {
-                    Toast.makeText(this, "That folder already exists", Toast.LENGTH_SHORT).show()
+                    showAppSnackbar(getString(R.string.error_album_exists))
                     return@setPositiveButton
                 }
                 dir.mkdirs()
@@ -619,6 +735,45 @@ class MainActivity : AppCompatActivity() {
         return trimmed.replace(Regex("""[\\/:*?"<>|.]"""), "_").take(48)
     }
 
+    /** Single path segment under the current album; no nested slashes. */
+    private fun sanitizeSubfolderName(raw: String): String {
+        val oneLine = raw.trim().replace('\\', '/').trim('/').ifEmpty { return "" }
+        val segment = oneLine.substringAfterLast('/').trim().trimEnd('.')
+        if (segment.isEmpty() || segment == "." || segment == "..") return ""
+        return segment.replace(Regex("""[\\/:*?"<>|]"""), "_").take(80).trim().trimEnd('.')
+    }
+
+    private fun promptCreateSubfolder() {
+        if (!SessionGate.isUnlocked) {
+            Toast.makeText(this, R.string.unlock_first, Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (browseMode != BrowseMode.ALBUM_CONTENT) return
+        val input = EditText(this).apply {
+            hint = getString(R.string.new_subfolder_hint)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.new_subfolder_title)
+            .setView(input)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val name = sanitizeSubfolderName(input.text?.toString().orEmpty())
+                if (name.isBlank()) {
+                    showAppSnackbar(getString(R.string.error_enter_subfolder_name))
+                    return@setPositiveButton
+                }
+                val parent = currentAlbumBrowseDir()
+                val dir = File(parent, name)
+                if (dir.exists()) {
+                    showAppSnackbar(getString(R.string.error_subfolder_exists))
+                    return@setPositiveButton
+                }
+                dir.mkdirs()
+                refreshAlbumFiles()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
     private fun refreshStatusText() {
         if (!SessionGate.isUnlocked) {
             binding.statusText.text = getString(R.string.vault_locked_status)
@@ -629,11 +784,26 @@ class MainActivity : AppCompatActivity() {
             BrowseMode.ALBUM_CONTENT -> {
                 val subCount = currentAlbumBrowseDir().listFiles()?.count { it.isDirectory } ?: 0
                 when {
-                    allVaultFiles.isEmpty() && subCount == 0 -> getString(R.string.no_files)
+                    allVaultFiles.isEmpty() && subCount == 0 -> getString(R.string.status_empty_album_ready)
                     allVaultFiles.isEmpty() -> getString(R.string.album_subfolders_only_hint)
-                    else -> getString(R.string.status_ready) + "\n\n" + getString(R.string.album_menu_hint)
+                    else -> getString(R.string.status_ready_short)
                 }
             }
+        }
+        refreshAlbumActionsHint()
+    }
+
+    private fun refreshAlbumActionsHint() {
+        val inAlbum = browseMode == BrowseMode.ALBUM_CONTENT && SessionGate.isUnlocked
+        if (!inAlbum) {
+            binding.albumSecondaryBlock.visibility = View.GONE
+            return
+        }
+        binding.albumSecondaryBlock.visibility = View.VISIBLE
+        binding.albumActionsHint.text = if (allVaultFiles.isEmpty()) {
+            getString(R.string.album_empty_hint)
+        } else {
+            getString(R.string.album_menu_hint)
         }
     }
 
@@ -698,11 +868,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showSessionUnlockPrompt() {
         if (!canUseBiometricOrDeviceCredential()) {
-            Toast.makeText(
-                this,
-                "Set a screen lock and fingerprint in system settings first.",
-                Toast.LENGTH_LONG,
-            ).show()
+            showAppSnackbar(getString(R.string.error_screen_lock_setup), longDuration = true)
             return
         }
         // Keystore may allow cipher init without a prompt for AUTH_VALIDITY_SECONDS after the last
@@ -718,14 +884,14 @@ class MainActivity : AppCompatActivity() {
                 onSuccess = {
                     SessionGate.unlock()
                     updateLockUi()
-                    Toast.makeText(this@MainActivity, R.string.unlock_success, Toast.LENGTH_SHORT).show()
+                    showAppSnackbar(getString(R.string.unlock_success))
                 },
             )
             return
         } catch (e: Exception) {
             if (handleKeystoreInvalidated(e)) return
             if (!e.isUserAuthRequired()) {
-                Toast.makeText(this, e.message ?: "Unlock failed", Toast.LENGTH_LONG).show()
+                showAppSnackbar(e.message ?: getString(R.string.error_unlock_failed), longDuration = true)
                 return
             }
         }
@@ -736,7 +902,7 @@ class MainActivity : AppCompatActivity() {
             onSuccess = {
                 SessionGate.unlock()
                 updateLockUi()
-                Toast.makeText(this@MainActivity, R.string.unlock_success, Toast.LENGTH_SHORT).show()
+                showAppSnackbar(getString(R.string.unlock_success))
             },
             onCancelled = { },
         )
@@ -761,7 +927,7 @@ class MainActivity : AppCompatActivity() {
                     if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
                         errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON
                     ) {
-                        Toast.makeText(this@MainActivity, errString, Toast.LENGTH_LONG).show()
+                        showAppSnackbar(errString, longDuration = true)
                     }
                 }
             },
@@ -845,7 +1011,7 @@ class MainActivity : AppCompatActivity() {
         importProgressBar = v.findViewById(R.id.importProgressBar)
         importProgressPercent = v.findViewById(R.id.importProgressPercent)
         importProgressDetail = v.findViewById(R.id.importProgressDetail)
-        importProgressDialog = AlertDialog.Builder(this)
+        importProgressDialog = MaterialAlertDialogBuilder(this)
             .setView(v)
             .setCancelable(false)
             .create()
@@ -929,7 +1095,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             if (!e.isUserAuthRequired()) {
-                Toast.makeText(this, e.message ?: "Crypto error", Toast.LENGTH_LONG).show()
+                showAppSnackbar(e.message ?: getString(R.string.error_crypto_generic), longDuration = true)
                 clearImportPending()
                 return
             }
@@ -956,7 +1122,10 @@ class MainActivity : AppCompatActivity() {
                 }.exceptionOrNull()
             }
             if (err != null) {
-                Toast.makeText(this@MainActivity, "Encryption failed: ${err.message}", Toast.LENGTH_LONG).show()
+                showAppSnackbar(
+                    getString(R.string.error_encryption_failed, err.message ?: ""),
+                    longDuration = true,
+                )
                 clearImportPending()
                 return@launch
             }
@@ -970,14 +1139,19 @@ class MainActivity : AppCompatActivity() {
                 dismissImportProgress()
                 importBatchTotal = 0
                 importBatchDone = 0
-                Toast.makeText(this@MainActivity, R.string.import_finished, Toast.LENGTH_SHORT).show()
+                showAppSnackbar(getString(R.string.import_finished))
             }
         }
     }
 
-    private fun otherAlbumNames(): List<String> {
+    /** Top-level album names usable as move/copy destinations (excludes current album and, on the library screen, selected albums). */
+    private fun destinationsForAlbumMoveOrCopy(): List<String> {
+        val exclude = when (browseMode) {
+            BrowseMode.FOLDER_BROWSER -> folderAdapter.getSelectedAlbumDirs().map { it.name }.toSet()
+            BrowseMode.ALBUM_CONTENT -> setOf(currentAlbumName)
+        }
         return albumsRoot.listFiles()
-            ?.filter { it.isDirectory && it.name != currentAlbumName }
+            ?.filter { it.isDirectory && it.name !in exclude }
             ?.map { it.name }
             ?.sorted()
             ?: emptyList()
@@ -1049,7 +1223,7 @@ class MainActivity : AppCompatActivity() {
                 refreshAlbumFiles()
                 refreshFolderBrowser()
                 refreshAlbumToolbarUi()
-                Toast.makeText(this, getString(R.string.bulk_remove_done, 1), Toast.LENGTH_SHORT).show()
+                showAppSnackbar(getString(R.string.bulk_remove_done, 1))
             }
             .show()
     }
@@ -1070,25 +1244,29 @@ class MainActivity : AppCompatActivity() {
                 var okDirs = 0
                 files.forEach { if (it.delete()) okFiles++ }
                 dirs.forEach { if (it.deleteRecursively()) okDirs++ }
+                if (dirs.any { it.parentFile == albumsRoot && it.name == currentAlbumName }) {
+                    currentAlbumName = DEFAULT_ALBUM
+                }
                 albumBrowseAdapter.clearSelection()
+                if (::folderAdapter.isInitialized) folderAdapter.clearSelection()
                 refreshAlbumFiles()
                 refreshFolderBrowser()
                 refreshAlbumToolbarUi()
-                val toast = when {
+                val msgDone = when {
                     dirs.isEmpty() -> getString(R.string.bulk_remove_done, okFiles)
                     files.isEmpty() -> getString(R.string.bulk_remove_done, okDirs)
                     else -> getString(R.string.bulk_remove_done_mixed, okFiles + okDirs, okFiles, okDirs)
                 }
-                Toast.makeText(this, toast, Toast.LENGTH_SHORT).show()
+                showAppSnackbar(msgDone)
             }
             .show()
     }
 
     private fun promptBulkMoveOrCopyToAlbum(files: List<File>, dirs: List<File>, move: Boolean) {
         if (files.isEmpty() && dirs.isEmpty()) return
-        val others = otherAlbumNames()
+        val others = destinationsForAlbumMoveOrCopy()
         if (others.isEmpty()) {
-            Toast.makeText(this, R.string.bulk_no_other_folders, Toast.LENGTH_LONG).show()
+            showAppSnackbar(getString(R.string.bulk_no_other_folders), longDuration = true)
             return
         }
         val title = if (move) R.string.bulk_pick_album_move else R.string.bulk_pick_album_copy
@@ -1113,6 +1291,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 albumBrowseAdapter.clearSelection()
+                if (::folderAdapter.isInitialized) folderAdapter.clearSelection()
                 refreshAlbumFiles()
                 refreshFolderBrowser()
                 refreshAlbumToolbarUi()
@@ -1121,7 +1300,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     getString(R.string.bulk_copy_done, ok)
                 }
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                showAppSnackbar(msg)
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
@@ -1133,7 +1312,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (!canUseBiometricOrDeviceCredential()) {
-            Toast.makeText(this, "Set up screen lock / biometrics in system settings.", Toast.LENGTH_LONG).show()
+            showAppSnackbar(getString(R.string.settings_biometrics_required), longDuration = true)
             return
         }
         pendingBatchExportFiles = files
@@ -1150,7 +1329,7 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             if (handleKeystoreInvalidated(e)) return
             if (!e.isUserAuthRequired()) {
-                Toast.makeText(this, e.message ?: "Export failed", Toast.LENGTH_LONG).show()
+                showAppSnackbar(e.message ?: getString(R.string.error_export_failed), longDuration = true)
                 return
             }
             showBiometric(
@@ -1201,11 +1380,10 @@ class MainActivity : AppCompatActivity() {
                 o to f
             }
             val ok = results.first
-            Toast.makeText(
-                this@MainActivity,
+            showAppSnackbar(
                 getString(R.string.export_batch_done, ok, files.size),
-                Toast.LENGTH_LONG,
-            ).show()
+                longDuration = true,
+            )
             albumBrowseAdapter.clearSelection()
             refreshAlbumToolbarUi()
         }
@@ -1258,7 +1436,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (!canUseBiometricOrDeviceCredential()) {
-            Toast.makeText(this, "Set up screen lock / biometrics in system settings.", Toast.LENGTH_LONG).show()
+            showAppSnackbar(getString(R.string.settings_biometrics_required), longDuration = true)
             return
         }
         val suggested = file.name.removeSuffix(".vault").ifEmpty { "decrypted.bin" }
@@ -1281,7 +1459,8 @@ class MainActivity : AppCompatActivity() {
         ) { tempFile ->
             startActivity(
                 Intent(this, AlphaImageActivity::class.java)
-                    .putExtra(AlphaImageActivity.EXTRA_PATH, tempFile.absolutePath),
+                    .putExtra(AlphaImageActivity.EXTRA_PATH, tempFile.absolutePath)
+                    .putExtra(AlphaImageActivity.EXTRA_DISPLAY_NAME, VaultMedia.displayName(file)),
             )
         }
     }
@@ -1291,17 +1470,16 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.unlock_first, Toast.LENGTH_SHORT).show()
             return
         }
-        decryptVaultFileToTemp(
-            file = file,
-            title = getString(R.string.preview_video),
-            subtitle = file.name,
-            onCancelled = { },
-        ) { tempFile ->
-            startActivity(
-                Intent(this, AlphaVideoActivity::class.java)
-                    .putExtra(AlphaVideoActivity.EXTRA_PATH, tempFile.absolutePath),
-            )
+        if (!canUseBiometricOrDeviceCredential()) {
+            showAppSnackbar(getString(R.string.settings_biometrics_required), longDuration = true)
+            return
         }
+        SessionGate.allowExternalFlowFor(EXTERNAL_FLOW_GRACE_MS)
+        startActivity(
+            Intent(this, AlphaVideoActivity::class.java)
+                .putExtra(AlphaVideoActivity.EXTRA_VAULT_PATH, file.absolutePath)
+                .putExtra(AlphaVideoActivity.EXTRA_DISPLAY_NAME, VaultMedia.displayName(file)),
+        )
     }
 
     private fun openFromGrid(file: File) {
@@ -1322,14 +1500,29 @@ class MainActivity : AppCompatActivity() {
         val cipher = VaultCrypto.newCipher()
 
         fun performDecryption(c: Cipher) {
-            runCatching {
-                PreviewCache.dir(this).mkdirs()
-                val inner = VaultMedia.displayName(file)
-                val out = File(PreviewCache.dir(this), "${UUID.randomUUID()}_$inner")
-                VaultIo.decryptVaultFileToPlainFile(file, out, c)
+            lifecycleScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        PreviewCache.dir(this@MainActivity).mkdirs()
+                        val inner = VaultMedia.displayName(file)
+                        val out = File(PreviewCache.dir(this@MainActivity), "${UUID.randomUUID()}_$inner")
+                        VaultIo.decryptVaultFileToPlainFile(file, out, c)
+                        out
+                    }
+                }
+                result.exceptionOrNull()?.let { e ->
+                    showAppSnackbar(
+                        getString(R.string.error_decrypt_failed, e.message ?: ""),
+                        longDuration = true,
+                    )
+                    return@launch
+                }
+                val out = result.getOrNull() ?: return@launch
+                if (isFinishing || !lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                    out.delete()
+                    return@launch
+                }
                 consumer(out)
-            }.onFailure { e ->
-                Toast.makeText(this, "Decryption failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -1340,7 +1533,7 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             if (handleKeystoreInvalidated(e)) return
             if (!e.isUserAuthRequired()) {
-                Toast.makeText(this, e.message ?: "Decrypt failed", Toast.LENGTH_LONG).show()
+                showAppSnackbar(e.message ?: getString(R.string.error_decrypt_generic), longDuration = true)
                 return
             }
         }
@@ -1382,7 +1575,7 @@ class MainActivity : AppCompatActivity() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 val c = result.cryptoObject?.cipher
                 if (c == null) {
-                    Toast.makeText(this@MainActivity, "Internal auth error", Toast.LENGTH_SHORT).show()
+                    showAppSnackbar(getString(R.string.error_internal_auth))
                     onCancelled()
                     return
                 }
@@ -1393,7 +1586,7 @@ class MainActivity : AppCompatActivity() {
                 if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
                     errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON
                 ) {
-                    Toast.makeText(this@MainActivity, errString, Toast.LENGTH_LONG).show()
+                    showAppSnackbar(errString, longDuration = true)
                 }
                 onCancelled()
             }

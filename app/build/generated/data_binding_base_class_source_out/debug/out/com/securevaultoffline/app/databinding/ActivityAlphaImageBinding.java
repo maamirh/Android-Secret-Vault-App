@@ -24,12 +24,17 @@ public final class ActivityAlphaImageBinding implements ViewBinding {
   public final AppCompatImageView imageView;
 
   @NonNull
+  public final CoordinatorLayout previewCoordinator;
+
+  @NonNull
   public final MaterialToolbar toolbar;
 
   private ActivityAlphaImageBinding(@NonNull CoordinatorLayout rootView,
-      @NonNull AppCompatImageView imageView, @NonNull MaterialToolbar toolbar) {
+      @NonNull AppCompatImageView imageView, @NonNull CoordinatorLayout previewCoordinator,
+      @NonNull MaterialToolbar toolbar) {
     this.rootView = rootView;
     this.imageView = imageView;
+    this.previewCoordinator = previewCoordinator;
     this.toolbar = toolbar;
   }
 
@@ -66,13 +71,16 @@ public final class ActivityAlphaImageBinding implements ViewBinding {
         break missingId;
       }
 
+      CoordinatorLayout previewCoordinator = (CoordinatorLayout) rootView;
+
       id = R.id.toolbar;
       MaterialToolbar toolbar = ViewBindings.findChildViewById(rootView, id);
       if (toolbar == null) {
         break missingId;
       }
 
-      return new ActivityAlphaImageBinding((CoordinatorLayout) rootView, imageView, toolbar);
+      return new ActivityAlphaImageBinding((CoordinatorLayout) rootView, imageView,
+          previewCoordinator, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

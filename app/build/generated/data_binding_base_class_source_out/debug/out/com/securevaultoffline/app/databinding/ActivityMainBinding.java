@@ -10,13 +10,16 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.textview.MaterialTextView;
 import com.securevaultoffline.app.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -24,7 +27,13 @@ import java.lang.String;
 
 public final class ActivityMainBinding implements ViewBinding {
   @NonNull
-  private final ConstraintLayout rootView;
+  private final CoordinatorLayout rootView;
+
+  @NonNull
+  public final MaterialTextView albumActionsHint;
+
+  @NonNull
+  public final LinearLayout albumSecondaryBlock;
 
   @NonNull
   public final FrameLayout browserFrame;
@@ -51,13 +60,28 @@ public final class ActivityMainBinding implements ViewBinding {
   public final FrameLayout lockOverlay;
 
   @NonNull
+  public final AppBarLayout mainAppBar;
+
+  @NonNull
+  public final ConstraintLayout mainContent;
+
+  @NonNull
+  public final CoordinatorLayout mainCoordinator;
+
+  @NonNull
   public final MaterialButton newAlbumButton;
+
+  @NonNull
+  public final MaterialButton newSubfolderButton;
 
   @NonNull
   public final MaterialCardView statusCard;
 
   @NonNull
   public final TextView statusText;
+
+  @NonNull
+  public final FrameLayout topSecondarySlot;
 
   @NonNull
   public final MaterialToolbar topToolbar;
@@ -68,15 +92,21 @@ public final class ActivityMainBinding implements ViewBinding {
   @NonNull
   public final MaterialButtonToggleGroup viewModeToggle;
 
-  private ActivityMainBinding(@NonNull ConstraintLayout rootView, @NonNull FrameLayout browserFrame,
-      @NonNull RecyclerView fileList, @NonNull RecyclerView folderList,
-      @NonNull MaterialButton gridModeButton, @NonNull MaterialButton importButton,
-      @NonNull LinearLayout libraryHeaderRow, @NonNull MaterialButton listModeButton,
-      @NonNull FrameLayout lockOverlay, @NonNull MaterialButton newAlbumButton,
-      @NonNull MaterialCardView statusCard, @NonNull TextView statusText,
+  private ActivityMainBinding(@NonNull CoordinatorLayout rootView,
+      @NonNull MaterialTextView albumActionsHint, @NonNull LinearLayout albumSecondaryBlock,
+      @NonNull FrameLayout browserFrame, @NonNull RecyclerView fileList,
+      @NonNull RecyclerView folderList, @NonNull MaterialButton gridModeButton,
+      @NonNull MaterialButton importButton, @NonNull LinearLayout libraryHeaderRow,
+      @NonNull MaterialButton listModeButton, @NonNull FrameLayout lockOverlay,
+      @NonNull AppBarLayout mainAppBar, @NonNull ConstraintLayout mainContent,
+      @NonNull CoordinatorLayout mainCoordinator, @NonNull MaterialButton newAlbumButton,
+      @NonNull MaterialButton newSubfolderButton, @NonNull MaterialCardView statusCard,
+      @NonNull TextView statusText, @NonNull FrameLayout topSecondarySlot,
       @NonNull MaterialToolbar topToolbar, @NonNull MaterialButton unlockButton,
       @NonNull MaterialButtonToggleGroup viewModeToggle) {
     this.rootView = rootView;
+    this.albumActionsHint = albumActionsHint;
+    this.albumSecondaryBlock = albumSecondaryBlock;
     this.browserFrame = browserFrame;
     this.fileList = fileList;
     this.folderList = folderList;
@@ -85,9 +115,14 @@ public final class ActivityMainBinding implements ViewBinding {
     this.libraryHeaderRow = libraryHeaderRow;
     this.listModeButton = listModeButton;
     this.lockOverlay = lockOverlay;
+    this.mainAppBar = mainAppBar;
+    this.mainContent = mainContent;
+    this.mainCoordinator = mainCoordinator;
     this.newAlbumButton = newAlbumButton;
+    this.newSubfolderButton = newSubfolderButton;
     this.statusCard = statusCard;
     this.statusText = statusText;
+    this.topSecondarySlot = topSecondarySlot;
     this.topToolbar = topToolbar;
     this.unlockButton = unlockButton;
     this.viewModeToggle = viewModeToggle;
@@ -95,7 +130,7 @@ public final class ActivityMainBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public ConstraintLayout getRoot() {
+  public CoordinatorLayout getRoot() {
     return rootView;
   }
 
@@ -120,6 +155,18 @@ public final class ActivityMainBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.albumActionsHint;
+      MaterialTextView albumActionsHint = ViewBindings.findChildViewById(rootView, id);
+      if (albumActionsHint == null) {
+        break missingId;
+      }
+
+      id = R.id.albumSecondaryBlock;
+      LinearLayout albumSecondaryBlock = ViewBindings.findChildViewById(rootView, id);
+      if (albumSecondaryBlock == null) {
+        break missingId;
+      }
+
       id = R.id.browserFrame;
       FrameLayout browserFrame = ViewBindings.findChildViewById(rootView, id);
       if (browserFrame == null) {
@@ -168,9 +215,29 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.mainAppBar;
+      AppBarLayout mainAppBar = ViewBindings.findChildViewById(rootView, id);
+      if (mainAppBar == null) {
+        break missingId;
+      }
+
+      id = R.id.mainContent;
+      ConstraintLayout mainContent = ViewBindings.findChildViewById(rootView, id);
+      if (mainContent == null) {
+        break missingId;
+      }
+
+      CoordinatorLayout mainCoordinator = (CoordinatorLayout) rootView;
+
       id = R.id.newAlbumButton;
       MaterialButton newAlbumButton = ViewBindings.findChildViewById(rootView, id);
       if (newAlbumButton == null) {
+        break missingId;
+      }
+
+      id = R.id.newSubfolderButton;
+      MaterialButton newSubfolderButton = ViewBindings.findChildViewById(rootView, id);
+      if (newSubfolderButton == null) {
         break missingId;
       }
 
@@ -183,6 +250,12 @@ public final class ActivityMainBinding implements ViewBinding {
       id = R.id.statusText;
       TextView statusText = ViewBindings.findChildViewById(rootView, id);
       if (statusText == null) {
+        break missingId;
+      }
+
+      id = R.id.topSecondarySlot;
+      FrameLayout topSecondarySlot = ViewBindings.findChildViewById(rootView, id);
+      if (topSecondarySlot == null) {
         break missingId;
       }
 
@@ -204,9 +277,11 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityMainBinding((ConstraintLayout) rootView, browserFrame, fileList,
-          folderList, gridModeButton, importButton, libraryHeaderRow, listModeButton, lockOverlay,
-          newAlbumButton, statusCard, statusText, topToolbar, unlockButton, viewModeToggle);
+      return new ActivityMainBinding((CoordinatorLayout) rootView, albumActionsHint,
+          albumSecondaryBlock, browserFrame, fileList, folderList, gridModeButton, importButton,
+          libraryHeaderRow, listModeButton, lockOverlay, mainAppBar, mainContent, mainCoordinator,
+          newAlbumButton, newSubfolderButton, statusCard, statusText, topSecondarySlot, topToolbar,
+          unlockButton, viewModeToggle);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

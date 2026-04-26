@@ -8,4 +8,15 @@
     <dimen name="alpha_card_stroke">1dp</dimen>
     <dimen name="alpha_grid_cell_gap">6dp</dimen>
     <dimen name="alpha_toolbar_elevation">3dp</dimen>
+    <!-- Screen & section rhythm (P1 tokens) -->
+    <dimen name="alpha_screen_pad_horizontal">16dp</dimen>
+    <dimen name="alpha_section_gap_vertical">12dp</dimen>
+    <dimen name="alpha_browser_pad_horizontal">8dp</dimen>
+    <dimen name="alpha_browser_pad_vertical">8dp</dimen>
+    <dimen name="alpha_toggle_margin_bottom">8dp</dimen>
+    <dimen name="alpha_import_corner_radius">14dp</dimen>
+    <dimen name="alpha_lock_card_radius">20dp</dimen>
+    <!-- Minimum touch target (Material / WCAG-friendly) for dynamic type -->
+    <dimen name="alpha_min_touch_target">48dp</dimen>
+    <dimen name="alpha_action_button_min_height">48dp</dimen>
 </resources>

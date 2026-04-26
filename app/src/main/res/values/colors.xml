@@ -14,4 +14,7 @@
     <color name="alpha_scrim">#CC0B1220</color>
     <!-- Fully opaque lock backdrop so nothing from the main UI leaks behind biometric -->
     <color name="alpha_lock_backdrop">#FF0B1220</color>
+    <color name="alpha_error">#F2B8B5</color>
+    <color name="alpha_on_error">#601410</color>
+    <color name="alpha_on_surface_variant">#B4C0D8</color>
 </resources>

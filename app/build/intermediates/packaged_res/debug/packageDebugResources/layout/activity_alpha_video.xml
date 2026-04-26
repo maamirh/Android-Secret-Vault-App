@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/previewCoordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/alpha_bg">
@@ -8,7 +9,9 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/alpha_surface">
+        android:background="@color/alpha_surface_elevated"
+        android:elevation="@dimen/alpha_toolbar_elevation"
+        app:liftOnScroll="false">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -23,6 +26,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
+        android:contentDescription="@string/preview_video"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:show_buffering="when_playing"
         app:use_controller="true" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

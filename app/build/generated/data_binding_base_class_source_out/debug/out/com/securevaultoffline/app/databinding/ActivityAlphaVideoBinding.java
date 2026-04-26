@@ -24,12 +24,17 @@ public final class ActivityAlphaVideoBinding implements ViewBinding {
   public final PlayerView playerView;
 
   @NonNull
+  public final CoordinatorLayout previewCoordinator;
+
+  @NonNull
   public final MaterialToolbar toolbar;
 
   private ActivityAlphaVideoBinding(@NonNull CoordinatorLayout rootView,
-      @NonNull PlayerView playerView, @NonNull MaterialToolbar toolbar) {
+      @NonNull PlayerView playerView, @NonNull CoordinatorLayout previewCoordinator,
+      @NonNull MaterialToolbar toolbar) {
     this.rootView = rootView;
     this.playerView = playerView;
+    this.previewCoordinator = previewCoordinator;
     this.toolbar = toolbar;
   }
 
@@ -66,13 +71,16 @@ public final class ActivityAlphaVideoBinding implements ViewBinding {
         break missingId;
       }
 
+      CoordinatorLayout previewCoordinator = (CoordinatorLayout) rootView;
+
       id = R.id.toolbar;
       MaterialToolbar toolbar = ViewBindings.findChildViewById(rootView, id);
       if (toolbar == null) {
         break missingId;
       }
 
-      return new ActivityAlphaVideoBinding((CoordinatorLayout) rootView, playerView, toolbar);
+      return new ActivityAlphaVideoBinding((CoordinatorLayout) rootView, playerView,
+          previewCoordinator, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

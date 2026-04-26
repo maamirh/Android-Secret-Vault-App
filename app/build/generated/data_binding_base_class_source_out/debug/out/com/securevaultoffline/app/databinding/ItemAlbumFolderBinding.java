@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.checkbox.MaterialCheckBox;
 import com.securevaultoffline.app.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -29,12 +30,17 @@ public final class ItemAlbumFolderBinding implements ViewBinding {
   @NonNull
   public final TextView folderName;
 
+  @NonNull
+  public final MaterialCheckBox folderSelectCheck;
+
   private ItemAlbumFolderBinding(@NonNull MaterialCardView rootView, @NonNull TextView folderCount,
-      @NonNull ImageView folderIcon, @NonNull TextView folderName) {
+      @NonNull ImageView folderIcon, @NonNull TextView folderName,
+      @NonNull MaterialCheckBox folderSelectCheck) {
     this.rootView = rootView;
     this.folderCount = folderCount;
     this.folderIcon = folderIcon;
     this.folderName = folderName;
+    this.folderSelectCheck = folderSelectCheck;
   }
 
   @Override
@@ -82,8 +88,14 @@ public final class ItemAlbumFolderBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.folderSelectCheck;
+      MaterialCheckBox folderSelectCheck = ViewBindings.findChildViewById(rootView, id);
+      if (folderSelectCheck == null) {
+        break missingId;
+      }
+
       return new ItemAlbumFolderBinding((MaterialCardView) rootView, folderCount, folderIcon,
-          folderName);
+          folderName, folderSelectCheck);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
