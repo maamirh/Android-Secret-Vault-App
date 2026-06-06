@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="10dp">
+        android:padding="@dimen/alpha_space_sm">
 
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/selectCheck"
@@ -33,15 +33,16 @@
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:background="@drawable/bg_thumb_placeholder"
-            android:contentDescription="@string/preview_image"
+            android:importantForAccessibility="no"
             android:scaleType="centerCrop" />
 
         <TextView
             android:id="@+id/fileName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/alpha_space_sm"
             android:ellipsize="end"
+            android:importantForAccessibility="no"
             android:maxLines="2"
             android:textAppearance="?attr/textAppearanceTitleSmall"
             android:textColor="@color/alpha_on_surface"
@@ -52,6 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
+            android:importantForAccessibility="no"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="@color/alpha_on_surface_muted"
             tools:text="Image" />
@@ -60,7 +62,8 @@
             android:id="@+id/actionScroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/alpha_space_xs"
+            android:contentDescription="@string/a11y_file_action_row"
             android:fillViewport="true"
             android:scrollbars="none">
 
@@ -75,6 +78,7 @@
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:minHeight="@dimen/alpha_action_button_min_height"
                     android:text="@string/view_file"
                     app:cornerRadius="12dp" />
 
@@ -83,7 +87,8 @@
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/alpha_space_sm"
+                    android:minHeight="@dimen/alpha_action_button_min_height"
                     android:text="@string/play_video"
                     app:cornerRadius="12dp" />
 
@@ -92,7 +97,8 @@
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/alpha_space_sm"
+                    android:minHeight="@dimen/alpha_action_button_min_height"
                     android:text="@string/export_decrypt"
                     app:cornerRadius="12dp" />
 
@@ -101,7 +107,8 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/alpha_space_sm"
+                    android:minHeight="@dimen/alpha_action_button_min_height"
                     android:text="@string/delete"
                     android:textColor="@color/alpha_on_surface_muted" />
             </LinearLayout>

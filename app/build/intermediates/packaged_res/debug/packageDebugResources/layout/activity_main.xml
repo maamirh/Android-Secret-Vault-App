@@ -1,171 +1,225 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainCoordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/alpha_bg"
     tools:context=".MainActivity">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/topToolbar"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/mainAppBar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/alpha_surface_elevated"
         android:elevation="@dimen/alpha_toolbar_elevation"
-        android:paddingStart="@dimen/alpha_space_md"
-        android:paddingEnd="@dimen/alpha_space_md"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:subtitle="@string/alpha_tagline"
-        app:subtitleTextColor="@color/alpha_on_surface_muted"
-        app:title="@string/app_name"
-        app:titleTextColor="@color/alpha_on_surface" />
+        app:liftOnScroll="false">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/statusCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/alpha_space_md"
-        android:layout_marginTop="@dimen/alpha_space_sm"
-        app:cardBackgroundColor="@color/alpha_surface_variant"
-        app:cardCornerRadius="@dimen/alpha_card_radius"
-        app:cardElevation="0dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/topToolbar"
-        app:strokeColor="@color/alpha_outline"
-        app:strokeWidth="1dp">
-
-        <TextView
-            android:id="@+id/statusText"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/topToolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/alpha_space_md"
-            android:text="@string/no_files"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="@color/alpha_on_surface" />
-    </com.google.android.material.card.MaterialCardView>
+            android:layout_height="?attr/actionBarSize"
+            android:paddingStart="@dimen/alpha_space_md"
+            android:paddingEnd="@dimen/alpha_space_md"
+            app:subtitle="@string/alpha_tagline"
+            app:subtitleTextColor="@color/alpha_on_surface_muted"
+            app:title="@string/app_name"
+            app:titleTextColor="@color/alpha_on_surface" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/importButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="12dp"
-        android:text="@string/add_encrypted_file"
-        app:cornerRadius="14dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusCard" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <LinearLayout
-        android:id="@+id/libraryHeaderRow"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="12dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/importButton">
-
-        <TextView
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/statusCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/albums_title"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:textColor="@color/alpha_on_surface" />
+            android:layout_marginHorizontal="@dimen/alpha_screen_pad_horizontal"
+            android:layout_marginTop="@dimen/alpha_section_gap_vertical"
+            app:cardBackgroundColor="@color/alpha_surface_variant"
+            app:cardCornerRadius="@dimen/alpha_card_radius"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeColor="@color/alpha_outline"
+            app:strokeWidth="1dp">
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:breakStrategy="high_quality"
+                android:ellipsize="end"
+                android:hyphenationFrequency="full"
+                android:maxLines="10"
+                android:padding="@dimen/alpha_space_md"
+                android:text="@string/no_files"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="@color/alpha_on_surface" />
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/newAlbumButton"
-            style="@style/Widget.Material3.Button.TextButton"
+            android:id="@+id/importButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/alpha_screen_pad_horizontal"
+            android:layout_marginTop="@dimen/alpha_section_gap_vertical"
+            android:minHeight="@dimen/alpha_min_touch_target"
+            android:text="@string/add_encrypted_file"
+            app:cornerRadius="@dimen/alpha_import_corner_radius"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/statusCard" />
+
+        <FrameLayout
+            android:id="@+id/topSecondarySlot"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/importButton">
+
+            <LinearLayout
+                android:id="@+id/libraryHeaderRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/alpha_screen_pad_horizontal"
+                android:layout_marginTop="@dimen/alpha_section_gap_vertical"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/albums_title"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="@color/alpha_on_surface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/newAlbumButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/alpha_min_touch_target"
+                    android:text="@string/new_album" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/albumSecondaryBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/alpha_screen_pad_horizontal"
+                android:paddingTop="@dimen/alpha_section_gap_vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/albumActionsHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:accessibilityHeading="true"
+                    android:paddingBottom="@dimen/alpha_space_xs"
+                    android:text="@string/album_menu_hint"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="@color/alpha_on_surface_variant" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/newSubfolderButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:minHeight="@dimen/alpha_min_touch_target"
+                    android:text="@string/new_subfolder" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/browserFrame"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="@dimen/alpha_browser_pad_horizontal"
+            android:layout_marginTop="@dimen/alpha_browser_pad_vertical"
+            android:layout_marginBottom="@dimen/alpha_browser_pad_vertical"
+            app:layout_constraintBottom_toTopOf="@id/viewModeToggle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topSecondarySlot">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/folderList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:contentDescription="@string/content_desc_folder_list"
+                android:paddingBottom="@dimen/alpha_space_sm"
+                tools:listitem="@layout/item_album_folder" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fileList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:contentDescription="@string/content_desc_album_items_list"
+                android:paddingBottom="@dimen/alpha_space_sm"
+                android:visibility="gone"
+                tools:listitem="@layout/item_vault_file" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/viewModeToggle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/new_album" />
-    </LinearLayout>
-
-    <FrameLayout
-        android:id="@+id/browserFrame"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@id/viewModeToggle"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/libraryHeaderRow">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/folderList"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="8dp"
-            tools:listitem="@layout/item_album_folder" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/fileList"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="8dp"
+            android:layout_marginHorizontal="@dimen/alpha_screen_pad_horizontal"
+            android:layout_marginBottom="@dimen/alpha_toggle_margin_bottom"
+            android:contentDescription="@string/a11y_view_mode_group"
             android:visibility="gone"
-            tools:listitem="@layout/item_vault_file" />
-    </FrameLayout>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:singleSelection="true">
 
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/viewModeToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:singleSelection="true">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/listModeButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/alpha_min_touch_target"
+                android:text="@string/view_list" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/listModeButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/view_list" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/gridModeButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/view_grid" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/gridModeButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/alpha_min_touch_target"
+                android:text="@string/view_grid" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout
         android:id="@+id/lockOverlay"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:background="@color/alpha_lock_backdrop"
         android:clickable="true"
         android:elevation="24dp"
         android:focusable="true"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:visibility="gone">
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginHorizontal="24dp"
+            android:layout_marginHorizontal="@dimen/alpha_space_lg"
             app:cardBackgroundColor="@color/alpha_surface"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="@dimen/alpha_lock_card_radius"
             app:cardElevation="8dp"
             app:strokeColor="@color/alpha_outline"
             app:strokeWidth="1dp">
@@ -175,18 +229,18 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="@dimen/alpha_space_lg">
 
                 <ImageView
                     android:layout_width="56dp"
                     android:layout_height="56dp"
-                    android:contentDescription="@string/app_name"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_alpha_launcher" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/alpha_space_sm"
                     android:text="@string/app_name"
                     android:textAppearance="?attr/textAppearanceHeadlineSmall"
                     android:textColor="@color/alpha_on_surface" />
@@ -194,7 +248,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/alpha_space_sm"
                     android:gravity="center"
                     android:text="@string/lock_overlay_hint"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
@@ -204,11 +258,12 @@
                     android:id="@+id/unlockButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="@dimen/alpha_space_md"
+                    android:minHeight="@dimen/alpha_min_touch_target"
                     android:text="@string/unlock_sign_in"
-                    app:cornerRadius="14dp" />
+                    app:cornerRadius="@dimen/alpha_import_corner_radius" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </FrameLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

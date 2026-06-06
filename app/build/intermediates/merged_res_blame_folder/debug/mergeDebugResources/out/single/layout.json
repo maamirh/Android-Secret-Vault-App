@@ -8,32 +8,24 @@
         "source": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-main-45:\\layout\\activity_main.xml"
     },
     {
-        "merged": "com.securevaultoffline.app-mergeDebugResources-42:/layout/item_album_subfolder_cell.xml",
-        "source": "com.securevaultoffline.app-main-45:/layout/item_album_subfolder_cell.xml"
-    },
-    {
-        "merged": "com.securevaultoffline.app-mergeDebugResources-42:/layout/item_album_folder.xml",
-        "source": "com.securevaultoffline.app-main-45:/layout/item_album_folder.xml"
-    },
-    {
         "merged": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-mergeDebugResources-42:\\layout\\item_album_folder.xml",
         "source": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-main-45:\\layout\\item_album_folder.xml"
     },
     {
-        "merged": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-mergeDebugResources-42:\\layout\\activity_alpha_image.xml",
-        "source": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-main-45:\\layout\\activity_alpha_image.xml"
+        "merged": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-mergeDebugResources-42:\\layout\\item_album_subfolder_cell.xml",
+        "source": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-main-45:\\layout\\item_album_subfolder_cell.xml"
     },
     {
         "merged": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-mergeDebugResources-42:\\layout\\activity_alpha_video.xml",
         "source": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-main-45:\\layout\\activity_alpha_video.xml"
     },
     {
-        "merged": "com.securevaultoffline.app-mergeDebugResources-42:/layout/activity_main.xml",
-        "source": "com.securevaultoffline.app-main-45:/layout/activity_main.xml"
+        "merged": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-mergeDebugResources-42:\\layout\\activity_alpha_image.xml",
+        "source": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-main-45:\\layout\\activity_alpha_image.xml"
     },
     {
-        "merged": "com.securevaultoffline.app-mergeDebugResources-42:/layout/item_vault_file.xml",
-        "source": "com.securevaultoffline.app-main-45:/layout/item_vault_file.xml"
+        "merged": "com.securevaultoffline.app-mergeDebugResources-42:/layout/activity_main.xml",
+        "source": "com.securevaultoffline.app-main-45:/layout/activity_main.xml"
     },
     {
         "merged": "C:\\Users\\maami\\.gradle\\daemon\\8.9\\com.securevaultoffline.app-mergeDebugResources-42:\\layout\\dialog_import_progress.xml",

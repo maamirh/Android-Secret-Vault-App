@@ -1,21 +1,28 @@
-# Security Policy
+# Security Overview
 
-## Supported Versions
+Android Secret Vault follows a local-first security model.
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+## Principles
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+- No cloud synchronization
+- No advertisements
+- No third-party tracking
+- User data remains on device
 
-## Reporting a Vulnerability
+## Encryption
 
-Use this section to tell people how to report a vulnerability.
+Sensitive data is encrypted before storage.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Data is only decrypted in memory when required by the application.
+
+## Threat Model
+
+The application aims to protect against:
+
+- Accidental data exposure
+- Unauthorized access to stored data
+- Third-party data collection
+
+## Reporting Security Issues
+
+Please report vulnerabilities privately before creating a public issue.

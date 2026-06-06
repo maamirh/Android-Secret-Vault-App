@@ -3,17 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/alpha_surface_variant"
     android:orientation="vertical"
-    android:paddingHorizontal="20dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="16dp">
+    android:paddingHorizontal="@dimen/alpha_space_lg"
+    android:paddingTop="@dimen/alpha_space_md"
+    android:paddingBottom="@dimen/alpha_space_md">
 
     <TextView
         android:id="@+id/importProgressTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?attr/textAppearanceTitleMedium"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="@color/alpha_on_surface"
         tools:text="Importing" />
 
     <ProgressBar
@@ -21,25 +22,27 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/alpha_space_sm"
+        android:indeterminateTint="@color/alpha_gold"
         android:max="100"
-        android:progress="0" />
+        android:progress="0"
+        android:progressTint="@color/alpha_gold" />
 
     <TextView
         android:id="@+id/importProgressPercent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/alpha_space_sm"
         android:textAppearance="?attr/textAppearanceTitleSmall"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="@color/alpha_on_surface"
         tools:text="0%" />
 
     <TextView
         android:id="@+id/importProgressDetail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="@dimen/alpha_space_xs"
         android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?android:attr/textColorSecondary"
+        android:textColor="@color/alpha_on_surface_variant"
         tools:text="0 / 0" />
 </LinearLayout>

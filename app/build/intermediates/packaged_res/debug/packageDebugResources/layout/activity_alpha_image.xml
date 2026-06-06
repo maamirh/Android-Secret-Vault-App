@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/previewCoordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/alpha_bg">
@@ -8,7 +9,9 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/alpha_surface">
+        android:background="@color/alpha_surface_elevated"
+        android:elevation="@dimen/alpha_toolbar_elevation"
+        app:liftOnScroll="false">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -25,5 +28,7 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:adjustViewBounds="true"
         android:contentDescription="@string/preview_image"
-        android:scaleType="fitCenter" />
+        android:importantForAccessibility="yes"
+        android:scaleType="fitCenter"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
